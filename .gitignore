@@ -1,0 +1,33 @@
+# Bytecode / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+ENV/
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Testes / cobertura / logs
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Distribuição
+dist/
+build/
+*.egg-info/
