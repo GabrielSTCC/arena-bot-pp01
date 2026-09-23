@@ -121,3 +121,23 @@ def _reconstruir(
         atual = veio_de[atual]
     caminho.reverse()
     return caminho
+
+
+def custo_bateria(
+    arena: Arena,
+    origem: Celula,
+    destino: Celula,
+    custo_normal: int,
+    custo_armadilha: int,
+) -> float:
+    """Bateria gasta para ir de origem até destino pelo caminho do A*."""
+    resultado=buscar_caminho(arena, origem, destino)
+    if not resultado.alcancavel:
+        return float("inf")
+    total = 0
+    for celula in resultado.caminho:
+        if celula in arena.armadilhas:
+            total+= custo_armadilha
+        else:
+            total += custo_normal
+    return total

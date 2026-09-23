@@ -35,6 +35,7 @@ CUSTO_PASSO_ARMADILHA: Final[int] = 4
 CAPACIDADE_CARGA: Final[int] = 3
 BONUS_ENTREGA: Final[int] = 10
 LIMIAR_BATERIA_SEGURA: Final[int] = 10
+MARGEM_BATERIA: Final[int] = 8
 
 # Custo de aresta no grafo de busca A* (não confundir com gasto de bateria).
 CUSTO_ARESTA_NORMAL: Final[int] = 1

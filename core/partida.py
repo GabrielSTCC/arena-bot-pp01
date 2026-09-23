@@ -127,10 +127,14 @@ class Partida:
             and agente.alvo != agente.base
             and agente.alvo not in self.arena.minerios
         )
-        if agente.alvo is not None and not alvo_sumiu and agente.caminho:
-            return
+        precisa_voltar = agente.precisa_retornar_base(self.arena)
+        indo_para_base = agente.alvo == agente.base
 
-        forcar_base = agente.precisa_retornar_base(self.arena)
+        if agente.alvo is not None and not alvo_sumiu and agente.caminho:
+            if not precisa_voltar or indo_para_base:
+                return
+
+        forcar_base = precisa_voltar
         agente.alvo = escolher_alvo(
             arena=self.arena,
             pos_agente=agente.posicao,

@@ -14,6 +14,7 @@ import config
 from core.arena import Arena, Celula, Minerio
 from ia import conhecimento as kb
 from ia.heuristicas import manhattan
+from ia.navegacao import custo_bateria
 
 
 @dataclass
@@ -77,8 +78,8 @@ class Agente:
             sobre_minerio=self.posicao in arena.minerios,
             armadilha_adjacente=self.armadilha_adjacente(arena),
             limiar_bateria=config.LIMIAR_BATERIA_SEGURA,
-            dist_manhattan_base=manhattan(self.posicao, self.base),
-            custo_passo_min=config.CUSTO_PASSO_NORMAL,
+            bateria_para_voltar=custo_bateria(arena, self.posicao, self.base, config.CUSTO_PASSO_NORMAL, config.CUSTO_PASSO_ARMADILHA),
+            margem=config.MARGEM_BATERIA,
         )
 
     def tentar_coletar(self, arena: Arena) -> bool:
@@ -112,10 +113,10 @@ class Agente:
         """Entrega carga na base, aplica bônus e recarrega bateria."""
         if self.posicao != self.base:
             return
+        self.bateria = config.BATERIA_INICIAL
         if self.carga > 0:
             self.pontuacao += self.carga * config.BONUS_ENTREGA
             self.carga = 0
-            self.bateria = config.BATERIA_INICIAL
             self.alvos_descartados.clear()
             self.alvo = None
             self.caminho.clear()
