@@ -63,10 +63,12 @@ class BaseConhecimento:
     Attributes:
         regras: Lista ordenada de cláusulas definidas.
         ultimo_rastreio: Histórico da última inferência (regra → conclusão).
+        ultimos_observados: Fatos recebidos na última inferência.
     """
 
     regras: list[Regra] = field(default_factory=list)
     ultimo_rastreio: list[tuple[str, str]] = field(default_factory=list)
+    ultimos_observados: set[str] = field(default_factory=set)
 
     def adicionar_regra(self, regra: Regra) -> None:
         """Inclui uma regra na base.
@@ -90,6 +92,7 @@ class BaseConhecimento:
         """
         fatos: set[str] = set(fatos_observados)
         self.ultimo_rastreio = []
+        self.ultimos_observados = set(fatos_observados)
         mudou = True
         while mudou:
             mudou = False
