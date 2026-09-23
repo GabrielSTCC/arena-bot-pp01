@@ -85,7 +85,7 @@ class Agente:
         )
 
     def tentar_coletar(self, arena: Arena) -> bool:
-        """Coleta minério somente se a BC derivar ``Pcoleta``.
+        """Coleta minério somente se a BC derivar ``Acoletar`` (R4).
 
         Args:
             arena: Ambiente com minérios.
@@ -93,13 +93,9 @@ class Agente:
         Returns:
             True se a coleta ocorreu.
         """
-        if self.posicao not in arena.minerios:
-            return False
 
         derivados = self.bc.inferir(self.fatos_observados(arena))
-        if kb.SIMBOLO_PCOLETA not in derivados:
-            return False
-        if kb.SIMBOLO_COLETA_RISCO in derivados and kb.SIMBOLO_PCOLETA not in derivados:
+        if kb.SIMBOLO_ACOLETAR not in derivados:
             return False
 
         minerio: Minerio = arena.remover_minerio(self.posicao)  # type: ignore[assignment]
