@@ -18,7 +18,7 @@ SIMBOLO_AADJ = "Aadj"
 SIMBOLO_PCOLETA = "Pcoleta"
 SIMBOLO_PDESCARGA = "Pdescarga"
 SIMBOLO_BATERIA_CRITICA = "Bcritica"
-SIMBOLO_COLETA_RISCO = "ColetaRisco"
+SIMBOLO_ACOLETAR = "Acoletar"
 
 
 @dataclass(frozen=True)
@@ -112,8 +112,8 @@ def construir_base_padrao() -> BaseConhecimento:
         1. Balta ∧ ¬Ccheia ⇒ Pcoleta
         2. Ccheia ⇒ Pdescarga
         3. Bcritica ⇒ Pdescarga (bateria insuficiente para retorno seguro)
-        4. Aadj ∧ ¬Balta ⇒ ColetaRisco (bloqueia coleta implícita via ausência
-           de Pcoleta quando Balta falha; marca risco para o agente)
+        4. Sminerio ∧ Pcoleta ⇒ Acoletar (só coleta sobre minério e com
+           coleta autorizada; encadeia a partir da R1)
 
     Returns:
         Base configurada e pronta para uso.
@@ -142,9 +142,9 @@ def construir_base_padrao() -> BaseConhecimento:
     )
     bc.adicionar_regra(
         Regra(
-            premissas=(SIMBOLO_AADJ, ("not", SIMBOLO_BALTA)),
-            conclusao=SIMBOLO_COLETA_RISCO,
-            nome="R4_armadilha_bateria_baixa",
+            premissas=(SIMBOLO_SMINERIO, SIMBOLO_PCOLETA),
+            conclusao=SIMBOLO_ACOLETAR,
+            nome="R4_coletar_se_autorizado",
         )
     )
     return bc
