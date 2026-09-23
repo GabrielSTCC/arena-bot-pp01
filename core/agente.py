@@ -32,6 +32,7 @@ class Agente:
         alvo: Destino estratégico atual (minério ou base).
         caminho: Fila de células restantes do A*.
         alvos_descartados: Minérios inalcançáveis já detectados.
+        custo_armadilha: Bateria gasta ao pisar em armadilha nesta partida.
         bc: Base de conhecimento proposicional.
     """
 
@@ -46,6 +47,7 @@ class Agente:
     caminho: list[Celula] = field(default_factory=list)
     alvos_descartados: set[Celula] = field(default_factory=set)
     bc: kb.BaseConhecimento = field(default_factory=kb.construir_base_padrao)
+    custo_armadilha: int = config.CUSTO_PASSO_ARMADILHA
 
     def armadilha_adjacente(self, arena: Arena) -> bool:
         """Detecta armadilha em vizinho ortogonal.
@@ -78,8 +80,8 @@ class Agente:
             sobre_minerio=self.posicao in arena.minerios,
             armadilha_adjacente=self.armadilha_adjacente(arena),
             limiar_bateria=config.LIMIAR_BATERIA_SEGURA,
-            bateria_para_voltar=custo_bateria(arena, self.posicao, self.base, config.CUSTO_PASSO_NORMAL, config.CUSTO_PASSO_ARMADILHA),
-            margem=config.MARGEM_BATERIA,
+            bateria_para_voltar=custo_bateria(arena, self.posicao, self.base, config.CUSTO_PASSO_NORMAL, self.custo_armadilha),
+            margem=2 * self.custo_armadilha,
         )
 
     def tentar_coletar(self, arena: Arena) -> bool:

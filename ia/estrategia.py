@@ -339,6 +339,7 @@ def escolher_alvo(
     minerios: dict[Celula, Minerio],
     descartados: set[Celula],
     bateria_agente: int,  
+    custo_armadilha: int,
     forcar_base: bool = False,
     profundidade: int = config.PROFUNDIDADE_MINIMAX,
     usar_poda: bool = True,
@@ -359,6 +360,7 @@ def escolher_alvo(
         minerios: Minérios restantes.
         descartados: Alvos inalcançáveis.
         bateria_agente: Bateria atual do robô da vez.
+        custo_armadilha: Bateria gasta ao pisar em armadilha nesta partida.
         forcar_base: Se True, retorna a base (ex.: Pdescarga).
         profundidade: Profundidade em plies (padrão ≥ 4).
         usar_poda: Ativa poda alfa-beta.
@@ -376,9 +378,9 @@ def escolher_alvo(
     # Prioridade: só persegue minério de onde ainda dá para voltar à base.
     viaveis = {}
     for pos, minerio in minerios_uteis.items():
-        ida = custo_bateria(arena, pos_agente, pos, config.CUSTO_PASSO_NORMAL, config.CUSTO_PASSO_ARMADILHA)
-        volta = custo_bateria(arena, pos, base_agente, config.CUSTO_PASSO_NORMAL, config.CUSTO_PASSO_ARMADILHA)
-        if bateria_agente > ida + volta + config.MARGEM_BATERIA:
+        ida = custo_bateria(arena, pos_agente, pos, config.CUSTO_PASSO_NORMAL, custo_armadilha)
+        volta = custo_bateria(arena, pos, base_agente, config.CUSTO_PASSO_NORMAL, custo_armadilha)
+        if bateria_agente > ida + volta + 2 * custo_armadilha:
             viaveis[pos] = minerio
     minerios_uteis = viaveis
 

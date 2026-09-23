@@ -148,6 +148,7 @@ class Partida:
             minerios=self.arena.minerios,
             descartados=agente.alvos_descartados,
             bateria_agente=agente.bateria,
+            custo_armadilha=agente.custo_armadilha,
             forcar_base=forcar_base,
             profundidade=config.PROFUNDIDADE_MINIMAX,
             usar_poda=True,
@@ -255,11 +256,13 @@ def criar_partida(
         posicao=config.BASE_ALFA,
         base=config.BASE_ALFA,
         cor=config.COR_ALFA,
+        custo_armadilha=cfg_uso.custo_passo_armadilha,
     )
     beta = Agente(
         nome="Beta",
         posicao=config.BASE_BETA,
         base=config.BASE_BETA,
         cor=config.COR_BETA,
+        custo_armadilha=cfg_uso.custo_passo_armadilha,
     )
     return Partida(arena=arena, alfa=alfa, beta=beta, seed=seed, cfg=cfg_uso)
