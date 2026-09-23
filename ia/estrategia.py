@@ -13,7 +13,7 @@ from typing import Optional
 import config
 from core.arena import Arena, Celula, Minerio
 from ia.heuristicas import manhattan
-from ia.navegacao import buscar_caminho
+from ia.navegacao import buscar_caminho, custo_bateria
 
 
 @dataclass
@@ -338,6 +338,7 @@ def escolher_alvo(
     base_inimigo: Celula,
     minerios: dict[Celula, Minerio],
     descartados: set[Celula],
+    bateria_agente: int,  
     forcar_base: bool = False,
     profundidade: int = config.PROFUNDIDADE_MINIMAX,
     usar_poda: bool = True,
@@ -357,6 +358,7 @@ def escolher_alvo(
         base_inimigo: Base do oponente.
         minerios: Minérios restantes.
         descartados: Alvos inalcançáveis.
+        bateria_agente: Bateria atual do robô da vez.
         forcar_base: Se True, retorna a base (ex.: Pdescarga).
         profundidade: Profundidade em plies (padrão ≥ 4).
         usar_poda: Ativa poda alfa-beta.
@@ -371,8 +373,22 @@ def escolher_alvo(
     minerios_uteis = {
         p: m for p, m in minerios.items() if p not in descartados
     }
+    # Prioridade: só persegue minério de onde ainda dá para voltar à base.
+    viaveis = {}
+    for pos, minerio in minerios_uteis.items():
+        ida = custo_bateria(arena, pos_agente, pos, config.CUSTO_PASSO_NORMAL, config.CUSTO_PASSO_ARMADILHA)
+        volta = custo_bateria(arena, pos, base_agente, config.CUSTO_PASSO_NORMAL, config.CUSTO_PASSO_ARMADILHA)
+        if bateria_agente > ida + volta + config.MARGEM_BATERIA:
+            viaveis[pos] = minerio
+    minerios_uteis = viaveis
+
     if not minerios_uteis:
-        return base_agente if carga_agente > 0 else None
+        if carga_agente > 0 or bateria_agente < config.BATERIA_INICIAL:
+            # Volta para descarregar/recarregar e tenta de novo com bateria cheia.
+            return base_agente
+        # Nem com bateria cheia dá para ir e voltar: desiste desses minérios.
+        descartados.update(minerios)
+        return None
 
     ctx = ContextoBusca(
         arena=arena,

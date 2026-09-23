@@ -147,6 +147,7 @@ class Partida:
             base_inimigo=inimigo.base,
             minerios=self.arena.minerios,
             descartados=agente.alvos_descartados,
+            bateria_agente=agente.bateria,
             forcar_base=forcar_base,
             profundidade=config.PROFUNDIDADE_MINIMAX,
             usar_poda=True,
