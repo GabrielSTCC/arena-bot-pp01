@@ -185,9 +185,23 @@ class Renderer:
             )
 
     @property
+    def offset_x(self) -> int:
+        """Centraliza a grade quando a janela é redimensionada."""
+        largura = self.superficie.get_width()
+        largura_grade = config.LARGURA_GRADE * config.TAMANHO_CELULA
+        return max(0, (largura - largura_grade) // 2)
+
+    @property
     def offset_y(self) -> int:
-        """Deslocamento vertical da grade (barra da janela + HUD)."""
-        return config.ALTURA_BARRA_JANELA + config.ALTURA_HUD
+        """Deslocamento vertical da grade, preservando HUD e painel inferior."""
+        altura = self.superficie.get_height()
+        altura_grade = config.ALTURA_GRADE * config.TAMANHO_CELULA
+        area_ia = config.ALTURA_AREA
+        topo = config.ALTURA_BARRA_JANELA + config.ALTURA_HUD
+        restante = altura - topo - area_ia
+        if restante >= altura_grade:
+            return topo + max(0, (restante - altura_grade) // 2)
+        return topo
 
     def celula_para_pixel(self, celula: tuple[int, int]) -> tuple[int, int]:
         """Converte coordenada da grade para canto superior esquerdo em pixels.
@@ -199,7 +213,7 @@ class Renderer:
             Posição em pixels.
         """
         x, y = celula
-        return x * config.TAMANHO_CELULA, self.offset_y + y * config.TAMANHO_CELULA
+        return self.offset_x + x * config.TAMANHO_CELULA, self.offset_y + y * config.TAMANHO_CELULA
 
     def _preencher_gradiente(self) -> None:
         """Fundo com gradiente vertical suave."""
@@ -276,6 +290,73 @@ class Renderer:
             return "robo_beta"
         return "robo_alfa"
 
+    def _desenhar_caminho(self, agente: Agente) -> None:
+        """Desenha a linha do caminho dos robos."""
+        if not agente.caminho_astar and agente.alvo is None:
+            return
+
+        t = config.TAMANHO_CELULA
+        overlay = pygame.Surface(self.superficie.get_size(), pygame.SRCALPHA)
+        pontos = [self.celula_para_pixel(agente.posicao)]
+        pontos.extend(self.celula_para_pixel(pos) for pos in agente.caminho_astar)
+
+        if len(pontos) < 2:
+            return
+
+        for idx in range(1, len(pontos)):
+            ponto_anterior = (
+                pontos[idx - 1][0] + t // 2,
+                pontos[idx - 1][1] + t // 2,
+            )
+            ponto_atual = (pontos[idx][0] + t // 2, pontos[idx][1] + t // 2)
+            pygame.draw.aaline(overlay, (*agente.cor, 140), ponto_anterior, ponto_atual)
+            pygame.draw.aaline(overlay, (*agente.cor, 200), ponto_anterior, ponto_atual)
+
+        self.superficie.blit(overlay, (0, 0))
+
+    def _desenhar_painel_movimentos(self, agentes: list[Agente]) -> None:
+        """Mostra dados resumido de cada um dos robos."""
+        if not agentes:
+            return
+
+        w, h = self.superficie.get_size()
+        y_base = (
+            config.ALTURA_BARRA_JANELA
+            + config.ALTURA_HUD
+            + config.ALTURA_GRADE * config.TAMANHO_CELULA
+        )
+        painel_h = min(config.ALTURA_AREA, max(120, h - y_base - 24))
+        painel = pygame.Rect(12, y_base + 12, w - 24, painel_h)
+        pygame.draw.rect(self.superficie, (18, 24, 32, 220), painel, border_radius=10)
+        pygame.draw.rect(self.superficie, config.COR_GRADE, painel, 1, border_radius=10)
+
+        largura_coluna = (painel.width - 36) // 2
+        x0 = painel.left + 12
+        x1 = painel.left + 12 + largura_coluna + 12
+
+        for idx, agente in enumerate(agentes):
+            x = x0 if idx == 0 else x1
+            y = painel.top + 10
+            titulo = self.fonte_pequena.render(f"{agente.nome}", True, agente.cor)
+            self.superficie.blit(titulo, (x, y))
+            y += 18
+
+            linhas = [
+                f"A*: {len(agente.caminho_astar)} passos",
+                f"BC: {agente.status_bc}",
+                f"Minimax: {agente.minimax_nos} nós · {agente.minimax_podas} podas",
+            ]
+            if agente.regras_disparadas:
+                linhas.append("Regras da BC:")
+                linhas.extend(agente.regras_disparadas[:3])
+
+            for linha in linhas:
+                if y + 14 > painel.bottom - 8:
+                    break
+                texto = self.fonte_pequena.render(linha, True, config.COR_TEXTO)
+                self.superficie.blit(texto, (x, y))
+                y += 16
+
     def desenhar_arena(self, arena: Arena, agentes: list[Agente]) -> None:
         """Desenha chão, paredes, armadilhas, minérios e robôs.
 
@@ -331,6 +412,10 @@ class Renderer:
                 width=2,
                 border_radius=6,
             )
+
+        for agente in agentes:
+            self._desenhar_caminho(agente)
+        self._desenhar_painel_movimentos(agentes)
 
         for agente in agentes:
             px, py = self.celula_para_pixel(agente.posicao)
