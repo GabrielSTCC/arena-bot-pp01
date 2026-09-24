@@ -127,10 +127,14 @@ class Partida:
             and agente.alvo != agente.base
             and agente.alvo not in self.arena.minerios
         )
-        if agente.alvo is not None and not alvo_sumiu and agente.caminho:
-            return
+        precisa_voltar = agente.precisa_retornar_base(self.arena)
+        indo_para_base = agente.alvo == agente.base
 
-        forcar_base = agente.precisa_retornar_base(self.arena)
+        if agente.alvo is not None and not alvo_sumiu and agente.caminho:
+            if not precisa_voltar or indo_para_base:
+                return
+
+        forcar_base = precisa_voltar
         agente.alvo = escolher_alvo(
             arena=self.arena,
             pos_agente=agente.posicao,
@@ -143,6 +147,8 @@ class Partida:
             base_inimigo=inimigo.base,
             minerios=self.arena.minerios,
             descartados=agente.alvos_descartados,
+            bateria_agente=agente.bateria,
+            custo_armadilha=agente.custo_armadilha,
             forcar_base=forcar_base,
             profundidade=config.PROFUNDIDADE_MINIMAX,
             usar_poda=True,
@@ -250,11 +256,13 @@ def criar_partida(
         posicao=config.BASE_ALFA,
         base=config.BASE_ALFA,
         cor=config.COR_ALFA,
+        custo_armadilha=cfg_uso.custo_passo_armadilha,
     )
     beta = Agente(
         nome="Beta",
         posicao=config.BASE_BETA,
         base=config.BASE_BETA,
         cor=config.COR_BETA,
+        custo_armadilha=cfg_uso.custo_passo_armadilha,
     )
     return Partida(arena=arena, alfa=alfa, beta=beta, seed=seed, cfg=cfg_uso)

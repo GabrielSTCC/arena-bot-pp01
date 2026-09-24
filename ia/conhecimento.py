@@ -158,8 +158,8 @@ def observar_fatos(
     sobre_minerio: bool,
     armadilha_adjacente: bool,
     limiar_bateria: int,
-    dist_manhattan_base: int,
-    custo_passo_min: int = 2,
+    bateria_para_voltar: float,
+    margem: int,
 ) -> set[str]:
     """Traduz leituras sensoriais nos símbolos proposicionais.
 
@@ -170,8 +170,8 @@ def observar_fatos(
         sobre_minerio: Robô está sobre célula com minério.
         armadilha_adjacente: Existe armadilha em vizinho-4.
         limiar_bateria: Limiar de segurança (> limiar ⇒ Balta).
-        dist_manhattan_base: Distância estimada até a base.
-        custo_passo_min: Gasto mínimo de bateria por passo.
+        bateria_para_voltar: Bateria gasta no caminho real (A*) até a base.
+        margem: Folga de segurança somada ao custo da volta.
 
     Returns:
         Conjunto de fatos observados (ainda sem derivados).
@@ -185,8 +185,8 @@ def observar_fatos(
         fatos.add(SIMBOLO_SMINERIO)
     if armadilha_adjacente:
         fatos.add(SIMBOLO_AADJ)
-    # Bateria insuficiente para cobrir o retorno estimado à base.
-    energia_retorno = dist_manhattan_base * custo_passo_min
-    if bateria <= energia_retorno and carga > 0:
+        
+    # Bateria não cobre o caminho real de volta à base mais a margem.
+    if bateria <= bateria_para_voltar + margem:
         fatos.add(SIMBOLO_BATERIA_CRITICA)
     return fatos
