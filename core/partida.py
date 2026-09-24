@@ -154,6 +154,8 @@ class Partida:
             usar_poda=True,
             contadores=self.contadores_ia,
         )
+        agente.minimax_nos = self.contadores_ia.nos_avaliados
+        agente.minimax_podas = self.contadores_ia.podas
 
     def _planejar_caminho(self, agente: Agente) -> bool:
         """Calcula A* até o alvo; descarta se inalcançável.
@@ -179,6 +181,7 @@ class Partida:
             return False
 
         agente.caminho = list(resultado.caminho)
+        agente.caminho_astar = list(resultado.caminho)
         return True
 
     def executar_turno(self) -> bool:
