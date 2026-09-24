@@ -45,9 +45,14 @@ class Agente:
     pontuacao: int = 0
     alvo: Optional[Celula] = None
     caminho: list[Celula] = field(default_factory=list)
+    caminho_astar: list[Celula] = field(default_factory=list)
     alvos_descartados: set[Celula] = field(default_factory=set)
     bc: kb.BaseConhecimento = field(default_factory=kb.construir_base_padrao)
     custo_armadilha: int = config.CUSTO_PASSO_ARMADILHA
+    regras_disparadas: list[str] = field(default_factory=list)
+    status_bc: str = "Sem decisão"
+    minimax_nos: int = 0
+    minimax_podas: int = 0
 
     def armadilha_adjacente(self, arena: Arena) -> bool:
         """Detecta armadilha em vizinho ortogonal.
@@ -93,18 +98,28 @@ class Agente:
         Returns:
             True se a coleta ocorreu.
         """
-
         derivados = self.bc.inferir(self.fatos_observados(arena))
+        self.regras_disparadas = [
+            self._texto_regra(nome, conclusao) for nome, conclusao in self.bc.ultimo_rastreio
+        ]
         if kb.SIMBOLO_ACOLETAR not in derivados:
+            self.status_bc = (
+                "Sem minério"
+                if self.posicao not in arena.minerios
+                else "Coleta proibida"
+            )
             return False
 
         minerio: Minerio = arena.remover_minerio(self.posicao)  # type: ignore[assignment]
         if minerio is None:
+            self.status_bc = "Coleta falhou"
             return False
+        self.status_bc = "Coleta permitida"
         self.pontuacao += minerio.valor
         self.carga += 1
         self.alvo = None
         self.caminho.clear()
+        self.caminho_astar.clear()
         return True
 
     def descarregar(self) -> None:
@@ -118,6 +133,22 @@ class Agente:
             self.alvos_descartados.clear()
             self.alvo = None
             self.caminho.clear()
+            self.caminho_astar.clear()
+
+    def _texto_regra(self, nome: str, conclusao: str) -> str:
+        """Converte a regra lógica em texto compreensível para o jogador."""
+        mapa = {
+            "R1_coleta_segura": "Coleta segura",
+            "R2_carga_cheia": "Carga cheia",
+            "R3_bateria_critica": "Bateria crítica",
+            "R4_coletar_se_autorizado": "Coleta autorizada",
+            "Pcoleta": "Permite coleta",
+            "Pdescarga": "Exige retorno",
+            "Acoletar": "Coletar",
+        }
+        regra = mapa.get(nome, nome)
+        conclusao_txt = mapa.get(conclusao, conclusao)
+        return f"{regra}: {conclusao_txt}"
 
     def precisa_retornar_base(self, arena: Arena) -> bool:
         """Consulta a BC para decidir se o retorno à base é obrigatório.
@@ -129,6 +160,14 @@ class Agente:
             True se ``Pdescarga`` foi inferido.
         """
         derivados = self.bc.inferir(self.fatos_observados(arena))
+        self.regras_disparadas = [
+            self._texto_regra(nome, conclusao) for nome, conclusao in self.bc.ultimo_rastreio
+        ]
+        self.status_bc = (
+            "Retorno obrigatório"
+            if kb.SIMBOLO_PDESCARGA in derivados
+            else "Retorno opcional"
+        )
         return kb.SIMBOLO_PDESCARGA in derivados
 
     def aplicar_custo_passo(
