@@ -45,11 +45,13 @@ class Aplicacao:
             config.ALTURA_BARRA_JANELA
             + config.ALTURA_GRADE * config.TAMANHO_CELULA
             + config.ALTURA_HUD
+            + config.ALTURA_AREA
         )
         self.largura_janela = self.largura_normal
         self.altura_janela = self.altura_normal
-        # Janela de tamanho fixo: RESIZABLE + VIDEORESIZE causa flicker no Wayland.
-        self.tela = pygame.display.set_mode((self.largura_janela, self.altura_janela))
+        self.tela = pygame.display.set_mode(
+            (self.largura_janela, self.altura_janela), pygame.RESIZABLE
+        )
         pygame.display.set_caption("Arena Bot — PP01")
         self.relogio = pygame.time.Clock()
         self.renderer = Renderer(self.tela)
@@ -150,7 +152,12 @@ class Aplicacao:
                 self._tecla(evento.key)
             elif evento.type == pygame.MOUSEBUTTONUP and evento.button == 1:
                 self._clique(evento.pos)
-            # Ignora VIDEORESIZE de propósito (causa troca/flicker de tela).
+            elif evento.type == pygame.VIDEORESIZE:
+                self.largura_janela, self.altura_janela = evento.size
+                self.tela = pygame.display.set_mode(
+                    (self.largura_janela, self.altura_janela), pygame.RESIZABLE
+                )
+                self.renderer.atualizar_superficie(self.tela)
 
     def _tecla(self, tecla: int) -> None:
         """Atalhos de teclado.
