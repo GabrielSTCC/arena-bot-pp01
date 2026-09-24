@@ -45,6 +45,7 @@ class Aplicacao:
             config.ALTURA_BARRA_JANELA
             + config.ALTURA_GRADE * config.TAMANHO_CELULA
             + config.ALTURA_HUD
+            + config.ALTURA_AREA
         )
         self.largura_janela = self.largura_normal
         self.altura_janela = self.altura_normal

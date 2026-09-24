@@ -48,6 +48,7 @@ PESO_VANTAGEM_DISTANCIA: Final[float] = 3.0
 # --- Interface Pygame ------------------------------------------------------
 TAMANHO_CELULA: Final[int] = 48
 ALTURA_HUD: Final[int] = 118
+ALTURA_AREA: Final[int] = 180
 ALTURA_BARRA_JANELA: Final[int] = 32
 FPS: Final[int] = 30
 DELAY_TURNO_MS: Final[int] = 180
