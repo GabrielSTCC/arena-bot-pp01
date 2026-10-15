@@ -8,7 +8,7 @@ disponível para comparação experimental (menos informativa em vizinhança-4).
 from __future__ import annotations
 
 import math
-from typing import Callable
+from collections.abc import Callable
 
 Celula = tuple[int, int]
 Heuristica = Callable[[Celula, Celula], float]

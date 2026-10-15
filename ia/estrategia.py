@@ -8,10 +8,10 @@ rasas usam A*; nós profundos usam Manhattan para conter o custo de busca.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 import config
 from core.arena import Arena, Celula, Minerio
+
 from ia.heuristicas import manhattan
 from ia.navegacao import buscar_caminho, custo_bateria
 
@@ -111,8 +111,7 @@ def avaliar(estado: EstadoEstrategico, ctx: ContextoBusca) -> float:
             ctx.peso_valor * minerio.valor
             + ctx.peso_dist * (d_min - d_max)
         )
-        if extra > melhor_extra:
-            melhor_extra = extra
+        melhor_extra = max(melhor_extra, extra)
     if melhor_extra == float("-inf"):
         return utilidade
     return utilidade + melhor_extra
@@ -194,8 +193,12 @@ def _aplicar(
     maximizando: bool,
     ctx: ContextoBusca,
     ply_restante: int,
-) -> Optional[EstadoEstrategico]:
+) -> EstadoEstrategico | None:
     """Aplica a ação abstrata (ir ao alvo e coletar / descarregar).
+
+    Se os dois disputam o mesmo minério, quem está estritamente mais perto
+    fica com os pontos e a carga. Empate, adversário inalcançável ou
+    adversário com carga cheia: o jogador da vez coleta.
 
     Args:
         estado: Estado pai.
@@ -210,9 +213,13 @@ def _aplicar(
     if maximizando:
         pos, base = estado.pos_max, estado.base_max
         pts, carga = estado.pts_max, estado.carga_max
+        pos_inimigo = estado.pos_min
+        pts_inimigo, carga_inimigo = estado.pts_min, estado.carga_min
     else:
         pos, base = estado.pos_min, estado.base_min
         pts, carga = estado.pts_min, estado.carga_min
+        pos_inimigo = estado.pos_max
+        pts_inimigo, carga_inimigo = estado.pts_max, estado.carga_max
 
     dist = _distancia(ctx.arena, pos, alvo, ply_restante, ctx.profundidade_max)
     if dist == float("inf"):
@@ -221,6 +228,8 @@ def _aplicar(
     novos_minerios = dict(estado.minerios)
     nova_carga = carga
     novos_pts = pts
+    novos_pts_inimigo = pts_inimigo
+    nova_carga_inimigo = carga_inimigo
 
     if alvo == base:
         if carga > 0:
@@ -231,31 +240,39 @@ def _aplicar(
         minerio = novos_minerios.pop(alvo, None)
         if minerio is None:
             return None
-        # Conflito pelo mesmo alvo: quem está mais perto "chega primeiro".
-        # Na transição abstrata já removemos o minério para o jogador da vez.
-        novos_pts += minerio.valor
-        nova_carga = min(carga + 1, config.CAPACIDADE_CARGA)
+        dist_inimigo = _distancia(
+            ctx.arena, pos_inimigo, alvo, ply_restante, ctx.profundidade_max
+        )
+        adversario_chega_antes = (
+            dist_inimigo < dist and carga_inimigo < config.CAPACIDADE_CARGA
+        )
         nova_pos = alvo
+        if adversario_chega_antes:
+            novos_pts_inimigo += minerio.valor
+            nova_carga_inimigo = min(carga_inimigo + 1, config.CAPACIDADE_CARGA)
+        else:
+            novos_pts += minerio.valor
+            nova_carga = min(carga + 1, config.CAPACIDADE_CARGA)
 
     if maximizando:
         return EstadoEstrategico(
             pos_max=nova_pos,
             pos_min=estado.pos_min,
             pts_max=novos_pts,
-            pts_min=estado.pts_min,
+            pts_min=novos_pts_inimigo,
             minerios=novos_minerios,
             carga_max=nova_carga,
-            carga_min=estado.carga_min,
+            carga_min=nova_carga_inimigo,
             base_max=estado.base_max,
             base_min=estado.base_min,
         )
     return EstadoEstrategico(
         pos_max=estado.pos_max,
         pos_min=nova_pos,
-        pts_max=estado.pts_max,
+        pts_max=novos_pts_inimigo,
         pts_min=novos_pts,
         minerios=novos_minerios,
-        carga_max=estado.carga_max,
+        carga_max=nova_carga_inimigo,
         carga_min=nova_carga,
         base_max=estado.base_max,
         base_min=estado.base_min,
@@ -299,11 +316,9 @@ def _minimax(
             if filho is None:
                 continue
             valor = _minimax(filho, profundidade - 1, alfa, beta, False, ctx)
-            if valor > melhor:
-                melhor = valor
+            melhor = max(melhor, valor)
             if ctx.usar_poda:
-                if melhor > alfa:
-                    alfa = melhor
+                alfa = max(alfa, melhor)
                 if alfa >= beta:
                     ctx.contadores.podas += 1
                     break
@@ -315,11 +330,9 @@ def _minimax(
         if filho is None:
             continue
         valor = _minimax(filho, profundidade - 1, alfa, beta, True, ctx)
-        if valor < melhor:
-            melhor = valor
+        melhor = min(melhor, valor)
         if ctx.usar_poda:
-            if melhor < beta:
-                beta = melhor
+            beta = min(beta, melhor)
             if alfa >= beta:
                 ctx.contadores.podas += 1
                 break
@@ -343,8 +356,8 @@ def escolher_alvo(
     forcar_base: bool = False,
     profundidade: int = config.PROFUNDIDADE_MINIMAX,
     usar_poda: bool = True,
-    contadores: Optional[ContadoresMinimax] = None,
-) -> Optional[Celula]:
+    contadores: ContadoresMinimax | None = None,
+) -> Celula | None:
     """Escolhe o próximo alvo via Minimax com poda alfa-beta.
 
     Args:
@@ -413,7 +426,7 @@ def escolher_alvo(
         base_min=base_inimigo,
     )
 
-    melhor_alvo: Optional[Celula] = None
+    melhor_alvo: Celula | None = None
     melhor_valor = float("-inf")
     alfa, beta = float("-inf"), float("inf")
 

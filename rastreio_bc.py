@@ -30,8 +30,10 @@ for seed in range(1, 31):
 
         if situacao and situacao not in encontradas:
             encontradas[situacao] = (
-                f"semente {seed}, turno {p.turno}, {robo.nome}, "
-                f"bateria {robo.bateria}, carga {carga_antes}",
+                (
+                    f"semente {seed}, turno {p.turno}, {robo.nome}, "
+                    f"bateria {robo.bateria}, carga {carga_antes}"
+                ),
                 sorted(fatos),
                 list(robo.bc.ultimo_rastreio),
             )

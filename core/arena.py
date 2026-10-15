@@ -9,11 +9,10 @@ from __future__ import annotations
 
 import random
 from collections import deque
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Iterable, Optional
 
 import config
-
 
 Celula = tuple[int, int]
 
@@ -49,7 +48,7 @@ class Arena:
     paredes: set[Celula] = field(default_factory=set)
     armadilhas: set[Celula] = field(default_factory=set)
     minerios: dict[Celula, Minerio] = field(default_factory=dict)
-    seed: Optional[int] = None
+    seed: int | None = None
 
     def dentro_limites(self, celula: Celula) -> bool:
         """Verifica se a célula está dentro da grade.
@@ -100,7 +99,7 @@ class Arena:
         candidatos = ((x, y - 1), (x, y + 1), (x - 1, y), (x + 1, y))
         return [v for v in candidatos if self.eh_livre(v)]
 
-    def remover_minerio(self, celula: Celula) -> Optional[Minerio]:
+    def remover_minerio(self, celula: Celula) -> Minerio | None:
         """Remove e devolve o minério na célula, se existir.
 
         Args:
@@ -160,7 +159,7 @@ def gerar_arena(
     n_paredes: int = config.NUM_PAREDES,
     n_minerios: int = config.NUM_MINERIOS,
     n_armadilhas: int = config.NUM_ARMADILHAS,
-    seed: Optional[int] = None,
+    seed: int | None = None,
 ) -> Arena:
     """Sorteia a arena preservando as células protegidas das bases.
 

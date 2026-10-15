@@ -5,11 +5,9 @@ Renderização da arena com sprites autorais (fallback geométrico se faltar PNG
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
-
-import pygame
 
 import config
+import pygame
 from core.agente import Agente
 from core.arena import Arena
 from core.config_partida import ConfigPartida
@@ -480,7 +478,7 @@ class Renderer:
         partida: Partida,
         round_atual: int = 1,
         num_rounds: int = 1,
-        placar: Optional[dict[str, int]] = None,
+        placar: dict[str, int] | None = None,
     ) -> None:
         """Desenha painel superior com cards dos robôs e info do torneio.
 
@@ -550,7 +548,7 @@ class Renderer:
         texto: str,
         centro: tuple[int, int],
         tamanho: tuple[int, int] = (220, 48),
-        mouse_pos: Optional[tuple[int, int]] = None,
+        mouse_pos: tuple[int, int] | None = None,
     ) -> pygame.Rect:
         """Desenha um botão e devolve seu retângulo de colisão.
 

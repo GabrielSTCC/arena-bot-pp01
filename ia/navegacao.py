@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import heapq
 from dataclasses import dataclass
-from typing import Optional
 
 from core.arena import Arena, Celula
+
 from ia.heuristicas import Heuristica, manhattan
 
 
@@ -63,7 +63,7 @@ def buscar_caminho(
     contador = 0
     heapq.heappush(fronteira, (heuristica(origem, destino), contador, origem))
 
-    veio_de: dict[Celula, Optional[Celula]] = {origem: None}
+    veio_de: dict[Celula, Celula | None] = {origem: None}
     g_score: dict[Celula, float] = {origem: 0.0}
     fechados: set[Celula] = set()
     nos_expandidos = 0
@@ -103,7 +103,7 @@ def buscar_caminho(
 
 
 def _reconstruir(
-    veio_de: dict[Celula, Optional[Celula]], destino: Celula
+    veio_de: dict[Celula, Celula | None], destino: Celula
 ) -> list[Celula]:
     """Reconstrói o caminho do sucessor da origem até o destino.
 
@@ -115,7 +115,7 @@ def _reconstruir(
         Lista ordenada de células a percorrer (sem a origem).
     """
     caminho: list[Celula] = []
-    atual: Optional[Celula] = destino
+    atual: Celula | None = destino
     while atual is not None and veio_de.get(atual) is not None:
         caminho.append(atual)
         atual = veio_de[atual]

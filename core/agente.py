@@ -8,13 +8,12 @@ com modelo interno do mundo e validação lógica antes da coleta.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 import config
-from core.arena import Arena, Celula, Minerio
 from ia import conhecimento as kb
-from ia.heuristicas import manhattan
 from ia.navegacao import custo_bateria
+
+from core.arena import Arena, Celula, Minerio
 
 
 @dataclass
@@ -43,7 +42,7 @@ class Agente:
     bateria: int = config.BATERIA_INICIAL
     carga: int = 0
     pontuacao: int = 0
-    alvo: Optional[Celula] = None
+    alvo: Celula | None = None
     caminho: list[Celula] = field(default_factory=list)
     caminho_astar: list[Celula] = field(default_factory=list)
     alvos_descartados: set[Celula] = field(default_factory=set)

@@ -6,14 +6,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Optional
 
 import config
+from ia.estrategia import ContadoresMinimax, escolher_alvo
+from ia.navegacao import buscar_caminho
+
 from core.agente import Agente
 from core.arena import Arena, gerar_arena
 from core.config_partida import ConfigPartida
-from ia.estrategia import ContadoresMinimax, escolher_alvo
-from ia.navegacao import buscar_caminho
 
 
 class ResultadoPartida(Enum):
@@ -43,7 +43,7 @@ class Partida:
     beta: Agente
     turno: int = 0
     contadores_ia: ContadoresMinimax = field(default_factory=ContadoresMinimax)
-    seed: Optional[int] = None
+    seed: int | None = None
     cfg: ConfigPartida = field(default_factory=ConfigPartida)
 
     @property
@@ -130,9 +130,13 @@ class Partida:
         precisa_voltar = agente.precisa_retornar_base(self.arena)
         indo_para_base = agente.alvo == agente.base
 
-        if agente.alvo is not None and not alvo_sumiu and agente.caminho:
-            if not precisa_voltar or indo_para_base:
-                return
+        if (
+            agente.alvo is not None
+            and not alvo_sumiu
+            and agente.caminho
+            and (not precisa_voltar or indo_para_base)
+        ):
+            return
 
         forcar_base = precisa_voltar
         agente.alvo = escolher_alvo(
@@ -224,18 +228,21 @@ class Partida:
                 agente.caminho.clear()
 
         # Chegou ao alvo sem coletar (ex.: BC negou) → reavalia depois.
-        if agente.alvo is not None and agente.posicao == agente.alvo:
-            if agente.alvo != agente.base:
-                agente.alvo = None
-                agente.caminho.clear()
+        if (
+            agente.alvo is not None
+            and agente.posicao == agente.alvo
+            and agente.alvo != agente.base
+        ):
+            agente.alvo = None
+            agente.caminho.clear()
 
         self.turno += 1
         return not self.terminou()
 
 
 def criar_partida(
-    seed: Optional[int] = None,
-    cfg: Optional[ConfigPartida] = None,
+    seed: int | None = None,
+    cfg: ConfigPartida | None = None,
 ) -> Partida:
     """Instancia arena e dois agentes prontos para jogar.
 

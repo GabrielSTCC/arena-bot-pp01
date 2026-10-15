@@ -6,13 +6,12 @@ from __future__ import annotations
 
 import random
 from enum import Enum, auto
-from typing import Optional
-
-import pygame
 
 import config
+import pygame
 from core.config_partida import ConfigPartida
 from core.partida import Partida, ResultadoPartida, criar_partida
+
 from ui.renderer import Renderer
 
 
@@ -55,7 +54,7 @@ class Aplicacao:
         self.relogio = pygame.time.Clock()
         self.renderer = Renderer(self.tela)
         self.estado = EstadoUI.MENU
-        self.partida: Optional[Partida] = None
+        self.partida: Partida | None = None
         self.botoes: dict[str, pygame.Rect] = {}
         self.tempo_proximo_turno = 0
         self._rodando = True
@@ -72,7 +71,7 @@ class Aplicacao:
         self.nova_partida()
         self.estado = EstadoUI.JOGANDO
 
-    def nova_partida(self, seed: Optional[int] = None) -> None:
+    def nova_partida(self, seed: int | None = None) -> None:
         """Cria uma nova partida com a configuração atual.
 
         Args:

@@ -7,8 +7,8 @@ Motor isolado da lógica de atuação: o agente apenas observa fatos e consulta
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Iterable, Optional
 
 # Símbolos mínimos do enunciado (Tabela 3) + derivados autorais.
 SIMBOLO_BALTA = "Balta"

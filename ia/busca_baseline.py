@@ -8,9 +8,9 @@ o custo assimétrico de armadilhas e sem h(n). Serve para contraste com A*.
 from __future__ import annotations
 
 from collections import deque
-from typing import Optional
 
 from core.arena import Arena, Celula
+
 from ia.navegacao import ResultadoBusca
 
 
@@ -38,7 +38,7 @@ def buscar_caminho_bfs(
         )
 
     fila: deque[Celula] = deque([origem])
-    veio_de: dict[Celula, Optional[Celula]] = {origem: None}
+    veio_de: dict[Celula, Celula | None] = {origem: None}
     nos_expandidos = 0
 
     while fila:
@@ -46,7 +46,7 @@ def buscar_caminho_bfs(
         nos_expandidos += 1
         if atual == destino:
             caminho: list[Celula] = []
-            no: Optional[Celula] = destino
+            no: Celula | None = destino
             while no is not None and veio_de.get(no) is not None:
                 caminho.append(no)
                 no = veio_de[no]
